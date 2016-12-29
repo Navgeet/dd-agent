@@ -42,7 +42,7 @@ from config import (
 
 )
 from daemon import AgentSupervisor, Daemon
-from emitter import http_emitter
+from emitter import statsd_emitter
 from utils.platform import Platform
 
 # utils
@@ -373,7 +373,7 @@ class Agent(Daemon):
         sys.exit(0)
 
     def _get_emitters(self):
-        return [http_emitter]
+        return [statsd_emitter]
 
     def _get_watchdog(self, check_freq):
         watchdog = None

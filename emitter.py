@@ -8,6 +8,7 @@ import logging
 import re
 import zlib
 import unicodedata
+import socket
 
 # 3p
 import requests
@@ -71,6 +72,34 @@ def sanitize_payload(item, log, sanitize_func):
         return sanitize_func(item, log)
 
     return item
+
+def split_tags(tags):
+    tag_map = {}
+    for tag in tags:
+        key, value = tag.split(':', 1)
+        tag_map[key] = value
+    return tag_map
+
+def statsd_emitter(message, log, agentConfig, endpoint):
+    "Send payload"
+    log.info('payload is:\n' + json.dumps(message, sort_keys=True, indent=4, separators=(',', ': ')))
+    payload = ""
+    metrics = message['metrics']
+    for metric in metrics:
+        measurement = metric[0]
+        value = metric[2]
+        _type = metric[3]['type']
+        tags = metric[3].get('tags', None)
+        statsd_types_map = {'gauge': 'g', 'rate': 'c'}
+        real_type = statsd_types_map[_type]
+        payload += measurement
+        if tags:
+            for key,val in split_tags(tags).iteritems():
+                payload += ',' + key.replace(':', '_|_') + '=' + val.replace(':', '_|_')
+        payload += ':' + str(value) + '|' + real_type + '\n'
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.sendto(payload, (agentConfig['statsd_host'], int(agentConfig['statsd_port'])))
+    s.close()
 
 def http_emitter(message, log, agentConfig, endpoint):
     "Send payload"
