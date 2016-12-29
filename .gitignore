@@ -25,6 +25,7 @@ dist/*
 nosetests*.xml
 stats.dat
 conf.d/*.yaml.example
+conf.d/*.yaml
 !conf.d/network.yaml
 packaging/build/
 packaging/root/
