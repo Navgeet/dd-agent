@@ -90,9 +90,15 @@ def statsd_emitter(message, log, agentConfig, endpoint):
         value = metric[2]
         _type = metric[3]['type']
         tags = metric[3].get('tags', None)
+        device_name = metric[3].get('device_name', None)
+        hostname = metric[3].get('hostname', None)
         statsd_types_map = {'gauge': 'g', 'rate': 'c'}
         real_type = statsd_types_map[_type]
         payload += measurement
+        if hostname:
+            payload += ',hostname=' + hostname
+        if device_name:
+            payload += ',device_name=' + device_name
         if tags:
             for key,val in split_tags(tags).iteritems():
                 payload += ',' + key.replace(':', '_|_') + '=' + val.replace(':', '_|_')
