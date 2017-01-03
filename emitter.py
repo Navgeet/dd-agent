@@ -82,7 +82,7 @@ def split_tags(tags):
 
 def statsd_emitter(message, log, agentConfig, endpoint):
     "Send payload"
-    log.info('payload is:\n' + json.dumps(message, sort_keys=True, indent=4, separators=(',', ': ')))
+    log.info('payload is:\n' + json.dumps(message['metrics'], sort_keys=True, indent=4, separators=(',', ': ')))
     payload = ""
     metrics = message['metrics']
     for metric in metrics:
@@ -103,8 +103,12 @@ def statsd_emitter(message, log, agentConfig, endpoint):
             for key,val in split_tags(tags).iteritems():
                 payload += ',' + key.replace(':', '_|_') + '=' + val.replace(':', '_|_')
         payload += ':' + str(value) + '|' + real_type + '\n'
+
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.sendto(payload, (agentConfig['statsd_host'], int(agentConfig['statsd_port'])))
+    lines = payload.splitlines()
+    for i in range(0, len(lines), 10):
+        p = "\n".join(lines[i:i+10])
+        s.sendto(p, (agentConfig['statsd_host'], int(agentConfig['statsd_port'])))
     s.close()
 
 def http_emitter(message, log, agentConfig, endpoint):
